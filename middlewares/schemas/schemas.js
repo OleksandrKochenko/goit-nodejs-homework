@@ -1,5 +1,4 @@
 const Joi = require("joi");
-const { HttpError } = require("../../helpers");
 
 const contactsAddSchema = Joi.object({
   name: Joi.string().required().messages({
@@ -11,18 +10,15 @@ const contactsAddSchema = Joi.object({
   phone: Joi.string().required().messages({
     "any.required": `missing required phone field`,
   }),
+  favorite: Joi.boolean(),
 });
 
-const validateData = (req, res, next) => {
-  const checkBody = Object.keys(req.body).length;
-  if (checkBody === 0) {
-    throw HttpError(400, "missing fields");
-  }
-  const { error } = contactsAddSchema.validate(req.body);
-  if (error) {
-    throw HttpError(400, error.message);
-  }
-  next();
-};
+const contactsPatchSchema = Joi.object({
+  favorite: Joi.boolean().required().messages({
+    "any.required": `missing field favorite`,
+  }),
+});
 
-module.exports = validateData;
+const schemas = { contactsAddSchema, contactsPatchSchema };
+
+module.exports = { schemas };
