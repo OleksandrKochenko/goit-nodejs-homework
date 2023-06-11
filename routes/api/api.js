@@ -10,7 +10,7 @@ const fetchListContacts = async (req, res, next) => {
   try {
     const { _id: owner } = req.user;
     const allContacts = await Contacts.find(
-      { owner },
+      { owner, ...req.query },
       "-createdAt -updatedAt"
     ).populate("owner", "_id name email");
     res.json(allContacts);
