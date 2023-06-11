@@ -9,9 +9,12 @@ const { SECRET_KEY } = process.env;
 const fetchListContacts = async (req, res, next) => {
   try {
     const { _id: owner } = req.user;
+    const { page = 1, limit = 10, ...query } = req.query;
+    const skip = (page - 1) * limit;
     const allContacts = await Contacts.find(
-      { owner, ...req.query },
-      "-createdAt -updatedAt"
+      { owner, ...query },
+      "-createdAt -updatedAt",
+      { skip, limit }
     ).populate("owner", "_id name email");
     res.json(allContacts);
   } catch (error) {
