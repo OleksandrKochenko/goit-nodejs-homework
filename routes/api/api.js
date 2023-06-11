@@ -8,7 +8,11 @@ const { SECRET_KEY } = process.env;
 
 const fetchListContacts = async (req, res, next) => {
   try {
-    const allContacts = await Contacts.find({});
+    const { _id: owner } = req.user;
+    const allContacts = await Contacts.find(
+      { owner },
+      "-createdAt -updatedAt"
+    ).populate("owner", "_id name email");
     res.json(allContacts);
   } catch (error) {
     next(error);
@@ -30,7 +34,8 @@ const fetchContact = async (req, res, next) => {
 
 const addContact = async (req, res, next) => {
   try {
-    const addedContact = await Contacts.create(req.body);
+    const { _id: owner } = req.user;
+    const addedContact = await Contacts.create({ ...req.body, owner });
     res.status(201).json(addedContact);
   } catch (error) {
     next(error);
