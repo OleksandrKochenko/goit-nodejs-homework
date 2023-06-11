@@ -1,4 +1,7 @@
+const bcrypt = require("bcryptjs");
+
 const Contacts = require("../../models/contact");
+const User = require("../../models/user");
 const { HttpError } = require("../../helpers");
 
 const fetchListContacts = async (req, res, next) => {
@@ -80,6 +83,54 @@ const updateFavorite = async (req, res, next) => {
   }
 };
 
+const signUp = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) throw HttpError(409, "Email already in use");
+
+    const hashPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({ ...req.body, password: hashPassword });
+    res.status(201).json({
+      user: {
+        email: newUser.email,
+        subscription: newUser.subscription,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const signIn = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const existingUser = await User.findOne({ email });
+
+    if (!existingUser) throw HttpError(401, "Email or password is wrong");
+
+    const passwordCompare = await bcrypt.compare(
+      password,
+      existingUser.password
+    );
+    if (!passwordCompare) throw HttpError(401, "Email or password is wrong");
+
+    const token = "some.token.sample";
+
+    res.json({
+      token,
+      user: {
+        email: existingUser.email,
+        subscription: existingUser.subscription,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   fetchListContacts,
   fetchContact,
@@ -87,4 +138,6 @@ module.exports = {
   deleteContact,
   changeContact,
   updateFavorite,
+  signUp,
+  signIn,
 };

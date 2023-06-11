@@ -1,5 +1,5 @@
 const { HttpError } = require("../helpers");
-const { schemas } = require("./schemas/schemas");
+const { schemas } = require("./schemas/contacts-schemas");
 
 const validateData = (req, res, next) => {
   const checkBody = Object.keys(req.body).length;
