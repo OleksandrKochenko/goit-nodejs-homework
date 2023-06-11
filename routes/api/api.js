@@ -1,8 +1,10 @@
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const Contacts = require("../../models/contact");
 const User = require("../../models/user");
 const { HttpError } = require("../../helpers");
+const { SECRET_KEY } = process.env;
 
 const fetchListContacts = async (req, res, next) => {
   try {
@@ -117,7 +119,11 @@ const signIn = async (req, res, next) => {
     );
     if (!passwordCompare) throw HttpError(401, "Email or password is wrong");
 
-    const token = "some.token.sample";
+    const payload = {
+      id: existingUser._id,
+    };
+
+    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "23h" });
 
     res.json({
       token,
