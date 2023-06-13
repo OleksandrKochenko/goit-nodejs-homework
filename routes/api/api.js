@@ -161,6 +161,15 @@ const logout = async (req, res, next) => {
   next(HttpError(204));
 };
 
+const updateSubscription = async (req, res, next) => {
+  const { _id } = req.user;
+  const { subscription } = req.body;
+  await User.findByIdAndUpdate(_id, { subscription });
+  res.json({
+    message: "subscription updated",
+  });
+};
+
 module.exports = {
   fetchListContacts,
   fetchContact,
@@ -172,4 +181,5 @@ module.exports = {
   signIn,
   getCurrentUser,
   logout,
+  updateSubscription,
 };

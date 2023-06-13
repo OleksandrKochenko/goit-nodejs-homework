@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const enumSubscriptions = require("../../constants/constants");
 
 const userRegisterSchema = Joi.object({
   name: Joi.string(),
@@ -28,6 +29,19 @@ const userLoginSchema = Joi.object({
   }),
 });
 
-const schemas = { userRegisterSchema, userLoginSchema };
+const userUpdateSubscriptionSchema = Joi.object({
+  subscription: Joi.string()
+    .valid(...enumSubscriptions)
+    .required()
+    .messages({
+      "any.required": `missing required field`,
+    }),
+});
+
+const schemas = {
+  userRegisterSchema,
+  userLoginSchema,
+  userUpdateSubscriptionSchema,
+};
 
 module.exports = { schemas };
