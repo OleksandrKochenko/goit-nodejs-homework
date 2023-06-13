@@ -132,6 +132,7 @@ const signIn = async (req, res, next) => {
     };
 
     const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "23h" });
+    await User.findByIdAndUpdate(existingUser._id, { token });
 
     res.json({
       token,
@@ -145,6 +146,21 @@ const signIn = async (req, res, next) => {
   }
 };
 
+const getCurrentUser = async (req, res, next) => {
+  const { email, subscription } = req.user;
+
+  res.json({
+    email,
+    subscription,
+  });
+};
+
+const logout = async (req, res, next) => {
+  const { _id } = req.user;
+  await User.findByIdAndUpdate(_id, { token: "" });
+  next(HttpError(204));
+};
+
 module.exports = {
   fetchListContacts,
   fetchContact,
@@ -154,4 +170,6 @@ module.exports = {
   updateFavorite,
   signUp,
   signIn,
+  getCurrentUser,
+  logout,
 };
