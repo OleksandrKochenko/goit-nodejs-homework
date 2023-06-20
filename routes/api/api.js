@@ -183,12 +183,17 @@ const updateSubscription = async (req, res, next) => {
 };
 
 const updateAvatar = async (req, res, next) => {
-  const { path: oldPath, filename } = req.file; //
-  const newPath = path.join(avatarsDir, filename); //
-  await fs.rename(oldPath, newPath); //
+  const { _id, name } = req.user;
+  const { path: oldPath, originalname } = req.file;
 
-  const { _id } = req.user;
-  const avatarURL = path.join("avatars", filename); //
+  const uniqPrefix =
+    Date.now() + "_" + Math.round(Math.random() * 1e9) + "_" + name;
+  const newFileName = `${uniqPrefix}_${originalname}`;
+
+  const newPath = path.join(avatarsDir, newFileName);
+  await fs.rename(oldPath, newPath);
+
+  const avatarURL = path.join("avatars", newFileName);
   await User.findByIdAndUpdate(_id, { avatarURL });
 
   res.json({
