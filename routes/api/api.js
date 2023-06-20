@@ -1,5 +1,8 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const fs = require("fs/promises");
+const path = require("path");
+const avatarsDir = path.resolve("public", "avatars");
 
 const Contacts = require("../../models/contact");
 const User = require("../../models/user");
@@ -102,11 +105,15 @@ const signUp = async (req, res, next) => {
 
     const hashPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await User.create({ ...req.body, password: hashPassword });
+    const newUser = await User.create({
+      ...req.body,
+      password: hashPassword,
+    });
     res.status(201).json({
       user: {
         email: newUser.email,
         subscription: newUser.subscription,
+        avatarURL: newUser.avatarURL,
       },
     });
   } catch (error) {
@@ -170,6 +177,20 @@ const updateSubscription = async (req, res, next) => {
   });
 };
 
+const updateAvatar = async (req, res, next) => {
+  const { path: oldPath, filename } = req.file; //
+  const newPath = path.join(avatarsDir, filename); //
+  await fs.rename(oldPath, newPath); //
+
+  const { _id } = req.user;
+  const avatarURL = path.join("avatars", filename); //
+  await User.findByIdAndUpdate(_id, { avatarURL });
+
+  res.json({
+    avatarURL,
+  });
+};
+
 module.exports = {
   fetchListContacts,
   fetchContact,
@@ -182,4 +203,5 @@ module.exports = {
   getCurrentUser,
   logout,
   updateSubscription,
+  updateAvatar,
 };
