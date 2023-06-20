@@ -1,4 +1,4 @@
-const { schemas } = require("./schemas/schemas");
+const { schemas } = require("./schemas/contacts-schemas");
 const { HttpError } = require("../helpers");
 
 const validatePatchData = (req, res, next) => {

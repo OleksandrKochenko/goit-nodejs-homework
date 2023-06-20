@@ -14,6 +14,9 @@ const {
   changeContact,
   updateFavorite,
 } = require("./api");
+const authentificate = require("../../middlewares/authentificate");
+
+router.use(authentificate);
 
 router.get("/", fetchListContacts);
 

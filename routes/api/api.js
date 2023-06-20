@@ -1,9 +1,21 @@
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
 const Contacts = require("../../models/contact");
+const User = require("../../models/user");
 const { HttpError } = require("../../helpers");
+const { SECRET_KEY } = process.env;
 
 const fetchListContacts = async (req, res, next) => {
   try {
-    const allContacts = await Contacts.find({});
+    const { _id: owner } = req.user;
+    const { page = 1, limit = 10, ...query } = req.query;
+    const skip = (page - 1) * limit;
+    const allContacts = await Contacts.find(
+      { owner, ...query },
+      "-createdAt -updatedAt",
+      { skip, limit }
+    ).populate("owner", "_id name email");
     res.json(allContacts);
   } catch (error) {
     next(error);
@@ -25,7 +37,8 @@ const fetchContact = async (req, res, next) => {
 
 const addContact = async (req, res, next) => {
   try {
-    const addedContact = await Contacts.create(req.body);
+    const { _id: owner } = req.user;
+    const addedContact = await Contacts.create({ ...req.body, owner });
     res.status(201).json(addedContact);
   } catch (error) {
     next(error);
@@ -80,6 +93,83 @@ const updateFavorite = async (req, res, next) => {
   }
 };
 
+const signUp = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) throw HttpError(409, "Email already in use");
+
+    const hashPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({ ...req.body, password: hashPassword });
+    res.status(201).json({
+      user: {
+        email: newUser.email,
+        subscription: newUser.subscription,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const signIn = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const existingUser = await User.findOne({ email });
+
+    if (!existingUser) throw HttpError(401, "Email or password is wrong");
+
+    const passwordCompare = await bcrypt.compare(
+      password,
+      existingUser.password
+    );
+    if (!passwordCompare) throw HttpError(401, "Email or password is wrong");
+
+    const payload = {
+      id: existingUser._id,
+    };
+
+    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "23h" });
+    await User.findByIdAndUpdate(existingUser._id, { token });
+
+    res.json({
+      token,
+      user: {
+        email: existingUser.email,
+        subscription: existingUser.subscription,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getCurrentUser = async (req, res, next) => {
+  const { email, subscription } = req.user;
+
+  res.json({
+    email,
+    subscription,
+  });
+};
+
+const logout = async (req, res, next) => {
+  const { _id } = req.user;
+  await User.findByIdAndUpdate(_id, { token: "" });
+  next(HttpError(204));
+};
+
+const updateSubscription = async (req, res, next) => {
+  const { _id } = req.user;
+  const { subscription } = req.body;
+  await User.findByIdAndUpdate(_id, { subscription });
+  res.json({
+    message: "subscription updated",
+  });
+};
+
 module.exports = {
   fetchListContacts,
   fetchContact,
@@ -87,4 +177,9 @@ module.exports = {
   deleteContact,
   changeContact,
   updateFavorite,
+  signUp,
+  signIn,
+  getCurrentUser,
+  logout,
+  updateSubscription,
 };
