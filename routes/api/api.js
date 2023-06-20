@@ -8,7 +8,7 @@ const avatarsDir = path.resolve("public", "avatars");
 
 const Contacts = require("../../models/contact");
 const User = require("../../models/user");
-const { HttpError } = require("../../helpers");
+const { HttpError, jimpUpload } = require("../../helpers");
 const { SECRET_KEY } = process.env;
 
 const fetchListContacts = async (req, res, next) => {
@@ -183,11 +183,13 @@ const updateSubscription = async (req, res, next) => {
 };
 
 const updateAvatar = async (req, res, next) => {
-  const { _id, name } = req.user;
+  const { _id, name: userName } = req.user;
   const { path: oldPath, originalname } = req.file;
 
+  await jimpUpload(oldPath);
+
   const uniqPrefix =
-    Date.now() + "_" + Math.round(Math.random() * 1e9) + "_" + name;
+    Date.now() + "_" + Math.round(Math.random() * 1e9) + "_" + userName;
   const newFileName = `${uniqPrefix}_${originalname}`;
 
   const newPath = path.join(avatarsDir, newFileName);
