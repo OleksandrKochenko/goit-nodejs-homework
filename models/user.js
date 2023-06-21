@@ -1,5 +1,6 @@
 const { Schema, model } = require("mongoose");
 const { handleMongooseError } = require("../middlewares");
+const enumSubscriptions = require("../constants/constants");
 
 const userSchema = new Schema(
   {
@@ -17,8 +18,11 @@ const userSchema = new Schema(
     },
     subscription: {
       type: String,
-      enum: ["starter", "pro", "business"],
+      enum: enumSubscriptions,
       default: "starter",
+    },
+    avatarURL: {
+      type: String,
     },
     token: { type: String },
   },

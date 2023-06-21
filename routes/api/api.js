@@ -1,9 +1,14 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const fs = require("fs/promises");
+const gravatar = require("gravatar");
+
+const path = require("path");
+const avatarsDir = path.resolve("public", "avatars");
 
 const Contacts = require("../../models/contact");
 const User = require("../../models/user");
-const { HttpError } = require("../../helpers");
+const { HttpError, jimpUpload } = require("../../helpers");
 const { SECRET_KEY } = process.env;
 
 const fetchListContacts = async (req, res, next) => {
@@ -102,11 +107,18 @@ const signUp = async (req, res, next) => {
 
     const hashPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await User.create({ ...req.body, password: hashPassword });
+    const avatarURL = gravatar.url(email);
+
+    const newUser = await User.create({
+      ...req.body,
+      password: hashPassword,
+      avatarURL,
+    });
     res.status(201).json({
       user: {
         email: newUser.email,
         subscription: newUser.subscription,
+        avatarURL: newUser.avatarURL,
       },
     });
   } catch (error) {
@@ -170,6 +182,27 @@ const updateSubscription = async (req, res, next) => {
   });
 };
 
+const updateAvatar = async (req, res, next) => {
+  const { _id, name: userName } = req.user;
+  const { path: oldPath, originalname } = req.file;
+
+  await jimpUpload(oldPath);
+
+  const uniqPrefix =
+    Date.now() + "_" + Math.round(Math.random() * 1e9) + "_" + userName;
+  const newFileName = `${uniqPrefix}_${originalname}`;
+
+  const newPath = path.join(avatarsDir, newFileName);
+  await fs.rename(oldPath, newPath);
+
+  const avatarURL = path.join("avatars", newFileName);
+  await User.findByIdAndUpdate(_id, { avatarURL });
+
+  res.json({
+    avatarURL,
+  });
+};
+
 module.exports = {
   fetchListContacts,
   fetchContact,
@@ -182,4 +215,5 @@ module.exports = {
   getCurrentUser,
   logout,
   updateSubscription,
+  updateAvatar,
 };
