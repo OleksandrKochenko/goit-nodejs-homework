@@ -2,6 +2,8 @@ const express = require("express");
 
 const {
   signUp,
+  verify,
+  resendVerify,
   signIn,
   getCurrentUser,
   logout,
@@ -12,11 +14,16 @@ const validateUserRegister = require("../../middlewares/validateUserRegister");
 const validateUserLogIn = require("../../middlewares/validateUserLogIn");
 const authentificate = require("../../middlewares/authentificate");
 const validateSubscriptionData = require("../../middlewares/validateSubscriptionData");
+const validateUserEmail = require("../../middlewares/validateUserEmail");
 const { upload } = require("../../middlewares");
 
 const router = express.Router();
 
 router.post("/register", validateUserRegister, signUp);
+
+router.get("/verify/:verificationToken", verify);
+
+router.post("/verify", validateUserEmail, resendVerify);
 
 router.post("/login", validateUserLogIn, signIn);
 
