@@ -16,6 +16,16 @@ const userRegisterSchema = Joi.object({
   }),
 });
 
+const userEmailSchema = Joi.object({
+  email: Joi.string()
+    .pattern(/^\S+@\S+\.\S+$/)
+    .required()
+    .messages({
+      "any.required": `missing required field email`,
+      "string.pattern.base": `invalid email`,
+    }),
+});
+
 const userLoginSchema = Joi.object({
   email: Joi.string()
     .pattern(/^\S+@\S+\.\S+$/)
@@ -40,6 +50,7 @@ const userUpdateSubscriptionSchema = Joi.object({
 
 const schemas = {
   userRegisterSchema,
+  userEmailSchema,
   userLoginSchema,
   userUpdateSubscriptionSchema,
 };
